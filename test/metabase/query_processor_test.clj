@@ -7,8 +7,10 @@
             [metabase
              [driver :as driver]
              [util :as u]]
+            [medley.core :as m]
             [metabase.test.data :as data]
-            [metabase.test.data.datasets :as datasets]))
+            [metabase.test.data.datasets :as datasets]
+            [metabase.test.data.dataset-definitions :as datadefs]))
 
 ;; make sure all the driver test extension namespaces are loaded <3
 ;; if this isn't done some things will get loaded at the wrong time which can end up causing test databases to be created more than once, which fails
@@ -142,6 +144,19 @@
   []
   (->columns "id" "name" "category_id" "latitude" "longitude" "price"))
 
+(def venue-name-values
+  {:id         4,
+   :values     (->> datadefs/test-data
+                    :table-definitions
+                    (m/find-first #(= "venues" (:table-name %)))
+                    :rows
+                    (map first)
+                    sort)
+   :updated_at #inst "2017-05-19T18:13:34.099000000-00:00",
+   :created_at #inst "2017-05-19T18:13:34.099000000-00:00",
+   :human_readable_values {},
+   :field_id 15})
+
 (defn venues-col
   "Return column information for the `venues` column named by keyword COL."
   [col]
@@ -153,7 +168,8 @@
      :id          {:special_type :type/PK
                    :base_type    (data/id-field-type)
                    :name         (data/format-name "id")
-                   :display_name "ID"}
+                   :display_name "ID"
+                   :values       []}
      :category_id {:extra_info   (if (data/fks-supported?)
                                    {:target_table_id (data/id :categories)}
                                    {})
@@ -179,7 +195,8 @@
      :name        {:special_type :type/Name
                    :base_type    (data/expected-base-type->actual :type/Text)
                    :name         (data/format-name "name")
-                   :display_name "Name"})))
+                   :display_name "Name"
+                   :values venue-name-values})))
 
 (defn venues-cols
   "`cols` information for all the columns in `venues`."
@@ -208,7 +225,8 @@
                                 :type/Category)
                 :base_type    (data/expected-base-type->actual :type/Integer)
                 :name         (data/format-name "venue_id")
-                :display_name "Venue ID"}
+                :display_name "Venue ID"
+                :values       []}
      :user_id  {:extra_info   (if (data/fks-supported?) {:target_table_id (data/id :users)}
                                   {})
                 :target       (target-field (users-col :id))
@@ -217,7 +235,8 @@
                                 :type/Category)
                 :base_type    (data/expected-base-type->actual :type/Integer)
                 :name         (data/format-name "user_id")
-                :display_name "User ID"})))
+                :display_name "User ID"
+                :values       []})))
 
 
 ;;; #### aggregate columns
